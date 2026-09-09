@@ -1,5 +1,5 @@
 {
   "version": "0.2.0",
-  "download_url": "https://github.com/YOUR_USERNAME/ai-job-finder/releases/download/v0.2.0/AIJobFinder-Setup.exe",
+  "download_url": "https://github.com/krishnabandhu1234-bot/ai-job-finder/releases/download/v0.2.0/AIJobFinder-Setup.exe",
   "notes": "Scan progress bar on the Dashboard, unbounded company discovery that keeps growing every run, and adaptive rate-limit handling."
 }
