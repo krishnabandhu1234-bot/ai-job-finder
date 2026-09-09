@@ -1,0 +1,12 @@
+.venv/
+.claude/
+__pycache__/
+*.pyc
+.env
+data/
+dist/
+build/
+packaging/dist_installer/
+*.spec.bak
+.pytest_cache/
+*.egg-info/

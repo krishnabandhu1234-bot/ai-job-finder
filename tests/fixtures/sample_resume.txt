@@ -1,0 +1,36 @@
+Jordan Smith
+jordan.smith@example.com | (512) 555-0199 | linkedin.com/in/jordansmith
+
+SUMMARY
+Results-driven Senior Thermal Engineer with a decade of experience in CFD simulation.
+
+EXPERIENCE
+Senior Thermal Engineer — Acme Aerospace
+Jan 2020 - Present
+• Led thermal analysis for satellite payloads, improving efficiency by 18%
+• Reduced simulation runtime by 40% using ANSYS Fluent automation scripts
+• Managed a team of 4 junior engineers
+
+Thermal Engineer — Beta Dynamics
+Jun 2015 - Dec 2019
+• Performed CFD simulations using ANSYS Fluent and OpenFOAM
+• Collaborated with cross-functional teams on satellite thermal control systems
+
+EDUCATION
+M.S. Mechanical Engineering — Stanford University
+2015
+
+B.S. Mechanical Engineering — University of Texas at Austin
+2013
+
+SKILLS
+ANSYS, Fluent, OpenFOAM, Python, MATLAB, SolidWorks
+
+CERTIFICATIONS
+Six Sigma Green Belt
+
+PROJECTS
+Satellite Thermal Control System Redesign — led redesign reducing weight by 12%
+
+PUBLICATIONS
+Smith, J. (2021). Advances in Satellite Thermal Modeling. Journal of Aerospace Engineering.
