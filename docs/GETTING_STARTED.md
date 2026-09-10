@@ -300,40 +300,43 @@ ways:
 **Get Update** opens the download link in your browser. The app never
 downloads or installs anything by itself — it tells you what's
 available and hands you the link, and you decide when to install it.
-Update checks happen at most once a day, and if no update source is
-configured for your build the app never contacts anything at all.
+Update checks happen at most once a day.
 
-### Turning this on (only needed once, when you ship a new version)
+**This works out of the box.** A freshly downloaded install already
+points at this project's own releases — there's nothing to configure,
+no setting to find. If you'd rather it never checked at all, set
+`updates.check_enabled` to off from the Settings page, or clear the
+`updates.manifest_url` setting to an empty value.
 
-The app checks a small JSON file you host yourself — there's no update
-server to run. To enable it:
+### Publishing a new release (for whoever maintains this project's builds)
 
-1. Host a file (a GitHub release asset works well — it's free, static,
-   and gets you a stable HTTPS URL). A ready-to-edit starting point is
-   checked in at `packaging/update_manifest.json`:
-   ```json
-   {
-     "version": "0.2.0",
-     "download_url": "https://github.com/you/ai-job-finder/releases/download/v0.2.0/AIJobFinder-Setup.exe",
-     "notes": "What changed in this release"
-   }
-   ```
-   Edit the `download_url` to point at your own repo/release, upload
-   `packaging\dist_installer\AIJobFinder-Setup.exe` as that release's
-   asset, then upload this JSON file itself as a release asset too (or
-   anywhere else static) to get its hosted URL.
-2. Point the app at that URL, either:
-   - set the environment variable `AIJF_UPDATE_MANIFEST_URL` before
-     building the installer (so every install checks it automatically), or
-   - enter the URL as the `updates.manifest_url` setting from inside
-     the running app (Settings page), no rebuild needed.
-3. Every time you cut a new release, update the `version` and
-   `download_url` in that one JSON file — existing installs pick it up
-   within a day, or immediately if the user clicks **Check for Updates
-   Now**.
+The app checks a small JSON file hosted as a release asset — there's no
+update server to run. The manifest lives at
+`packaging/update_manifest.json` in this repo and gets hosted at a
+**stable URL that never changes between releases** (it's always
+uploaded to the same one release, `v0.2.0`, regardless of what version
+it currently describes) — that stability is what lets every install's
+update-check URL stay correct forever without anyone having to update
+it. To publish a new version:
 
-Nothing else changes: the app still never installs anything for the
-user, it just tells them a newer version and a link exist.
+1. Update `version`, `download_url`, and `notes` in
+   `packaging/update_manifest.json` to describe the new release.
+2. Upload the new installer (`packaging\dist_installer\AIJobFinder-Setup.exe`)
+   as that new release's own GitHub asset.
+3. Re-upload `update_manifest.json` to the **v0.2.0** release specifically
+   (`gh release upload v0.2.0 packaging\update_manifest.json --clobber`)
+   — not the new release — so it keeps living at the same URL every
+   install already has configured.
+
+Existing installs pick up the new version within a day, or immediately
+if the user clicks **Check for Updates Now**. Nothing else changes: the
+app still never installs anything for the user, it just tells them a
+newer version and a link exist.
+
+If you fork this project and want it checking your own releases
+instead, set the `AIJF_UPDATE_MANIFEST_URL` environment variable before
+building the installer, or the `updates.manifest_url` setting from
+inside a running install — see `.env.example`.
 
 ---
 

@@ -76,10 +76,22 @@ class AppConfig(BaseSettings):
     log_level: str = Field(default="INFO", alias="AIJF_LOG_LEVEL")
 
     # Where to look for "is there a newer version of this app?" - a small
-    # static JSON file (see app/core/updates.py for the shape). Empty by
-    # default, which makes update checking completely inert rather than
-    # pointing at a URL that doesn't exist yet.
-    update_manifest_url: str = Field(default="", alias="AIJF_UPDATE_MANIFEST_URL")
+    # static JSON file (see app/core/updates.py for the shape). Defaults
+    # to this project's own hosted manifest, so a freshly downloaded
+    # install can tell the user about new releases without them having
+    # to find and enter this URL themselves first - see docs/GETTING_
+    # STARTED.md "App updates" for how that file gets kept up to date.
+    # The URL is deliberately stable across releases (it always lives at
+    # the v0.2.0 release's asset, whatever the CURRENT version is) so
+    # this default never needs to change again. Override with the
+    # AIJF_UPDATE_MANIFEST_URL env var (or the in-app Settings field) to
+    # point at a different manifest entirely - e.g. if you fork this
+    # project and cut your own releases - or set it to an empty string
+    # to disable update checking outright.
+    update_manifest_url: str = Field(
+        default="https://github.com/krishnabandhu1234-bot/ai-job-finder/releases/download/v0.2.0/update_manifest.json",
+        alias="AIJF_UPDATE_MANIFEST_URL",
+    )
 
     @field_validator("log_level")
     @classmethod

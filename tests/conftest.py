@@ -70,6 +70,15 @@ def app_config(tmp_path, monkeypatch) -> AppConfig:
     monkeypatch.setenv("AIJF_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("AIJF_DEMO_MODE", "true")
     monkeypatch.setenv("AIJF_LOG_LEVEL", "DEBUG")
+    # The app ships with a real, hardcoded default update-manifest URL
+    # (see app/core/config.py) so a fresh install checks for updates out
+    # of the box. Tests must not inherit that - it would mean anything
+    # that calls check_for_update() without explicitly mocking it starts
+    # attempting a real request, only silently saved by check_for_update
+    # swallowing every exception (including the _no_real_network guard's
+    # AssertionError). Empty keeps tests exercising the same "update
+    # checking is off" path the app takes on a build with no URL set.
+    monkeypatch.setenv("AIJF_UPDATE_MANIFEST_URL", "")
     config = reload_config_for_tests()
     yield config
     reload_config_for_tests()
