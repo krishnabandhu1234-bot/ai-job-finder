@@ -59,3 +59,14 @@ def default_data_dir() -> Path:
 def ensure_dir(path: Path) -> Path:
     path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def browsers_dir() -> Path:
+    """Where the optional headless-browser (Playwright/Chromium) files
+    live, for the "any career page" job source's JS-rendering fallback.
+
+    Kept under the writable per-user data dir rather than next to the
+    app itself - a per-machine install under Program Files usually isn't
+    writable by a normal user, and Playwright's own default location can
+    collide across apps that bundle different versions."""
+    return ensure_dir(default_data_dir() / "browsers")

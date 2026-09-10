@@ -1,10 +1,15 @@
 """The JobSource interface (section 4):
 
     JobSource
-    ├── CompanyCareerPagesSource   (future)
     ├── GreenhouseSource
     ├── LeverSource
     ├── AshbySource
+    ├── WorkableSource
+    ├── SmartRecruitersSource
+    ├── ResumeSearchSource
+    ├── CompanyCareerPageSource    (app/jobs/career_page_source.py -
+    │                               reads any company's own career page,
+    │                               not tied to one platform's API)
     ├── WorkdaySource              (future)
     ├── PublicJobAPI               (future)
     └── DemoSource

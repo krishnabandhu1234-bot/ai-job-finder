@@ -312,6 +312,67 @@ never a guess written into your database.
 - Already-watched companies are skipped rather than re-probed, so a run
   only ever spends its budget on names it hasn't settled yet.
 
+### 4d. Reading any company's own careers page (not just those five platforms)
+
+**Job Sources page → add a source, type "Company career page (any
+URL)".** Paste any company's careers page URL and this reads it
+directly - it isn't limited to Greenhouse/Lever/Ashby/Workable/
+SmartRecruiters the way everything above is.
+
+How it reads the page:
+1. Checks `robots.txt` first (the one source type that does - it's
+   reading a page meant for a human browser, not a documented API).
+2. Fetches the page and looks for links that read like job postings -
+   this needs no AI and works on most career pages, since most render
+   their job list directly in the page's HTML.
+3. If that finds almost nothing, falls back to rendering the page in a
+   real headless (invisible) browser before looking again - this is what
+   catches a page whose job list is drawn in by JavaScript after the
+   page loads, which a plain fetch can never see. Slower, but it gets
+   there.
+4. **If even that fails** and you've opted in (see below), falls back
+   once more to a real browser you're already logged into - some sites
+   specifically block anonymous automated browsers but allow a real,
+   real-cookies one. This is the slowest and most capable tier, and it's
+   the only one that ever touches your own browser.
+5. **Where an LLM is configured**, the page (however it was obtained) is
+   handed to it instead of relying on the link-pattern heuristic - it
+   reads an unfamiliar page layout roughly the way a person would, which
+   is far more reliable across the huge variety of real career-page
+   designs than any fixed pattern can be. Without an LLM, the
+   link-pattern heuristic alone is used.
+6. Visits each posting's own page (up to a cap) to pull its actual
+   description, so these postings get scored against your resume on
+   their real content - the same as every other source's postings -
+   rather than on a title alone.
+
+**Requirements and limits:**
+- Needs no AI for the basic version (steps 2, 6); an LLM makes the
+  extraction meaningfully better (step 5) and is what to set up if a
+  particular company's page isn't yielding good results.
+- The headless-render fallback (step 3) is an optional dependency
+  (`playwright`, plus a one-time `playwright install chromium` browser
+  download, a few hundred MB) - not bundled into the installer by
+  default because of that size. Without it, this source still works on
+  every career page that doesn't require JavaScript to show its job
+  list, which is most of them; it just can't reach the JS-only ones.
+- **The "your own browser" fallback (step 4) is off by default** and
+  needs two things: turning it on under AI Settings → "Browser fallback
+  for Company career page sources", AND starting your own Chrome/Edge
+  with the `--remote-debugging-port=9222` command-line flag before a
+  scan runs (close the browser first, then relaunch it with that flag).
+  The app attaches to that running browser, opens one extra tab to read
+  a page, and closes only that tab - it never closes your browser or
+  touches your other tabs, and this tier is never used unless every
+  faster one already failed.
+- **This is a manual add, not something automatic discovery can do on
+  its own.** Turning a company's name into the right URL for their
+  careers page would need a real web-search API - a separate, paid
+  capability this app doesn't use. Give it the URL, though, and it reads
+  that page about as well as engineering allows.
+- Respects `robots.txt` - a site that disallows automated access is
+  skipped, the same as it would be for a browser extension or crawler.
+
 ## 5. Letting the AI read your resume
 
 **Resumes page → "Read My Resume with AI".** Off unless you press it.

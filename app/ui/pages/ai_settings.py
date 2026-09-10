@@ -20,6 +20,11 @@ from PySide6.QtWidgets import (
 from app.ai.ranker import DEFAULT_EMBEDDING_TOP_N, DEFAULT_LLM_TOP_N
 from app.core.constants import EmbeddingProvider, LLMProvider
 from app.database.db import session_scope
+from app.jobs.career_page_source import (
+    DEFAULT_CDP_URL,
+    SETTING_BROWSER_AGENT_CDP_URL,
+    SETTING_BROWSER_AGENT_ENABLED,
+)
 from app.ui.base_page import BasePage, make_card
 
 _KEY_PREFIX = "ai."
@@ -152,6 +157,37 @@ class AISettingsPage(BasePage):
         funnel_wrap.addLayout(funnel_form)
         self.content_layout.addWidget(funnel_card)
 
+        browser_card = make_card()
+        browser_wrap = QVBoxLayout(browser_card)
+        browser_wrap.setContentsMargins(20, 20, 20, 20)
+        browser_title = QLabel("Browser fallback for \"Company career page\" sources (advanced)")
+        browser_title.setStyleSheet("font-weight: 600; font-size: 14px;")
+        browser_wrap.addWidget(browser_title)
+        browser_note = QLabel(
+            "Off by default and does nothing until both turned on here AND you start your own "
+            "Chrome or Edge with remote debugging enabled. When a \"Company career page\" source "
+            "(Job Sources page) can't read a site any other way - not even the app's own invisible "
+            "browser - it can, as a last resort, attach to your already-running, already-logged-in "
+            "browser instead. Some sites specifically block anonymous automated browsers but allow "
+            "a real one; this is what gets past that. It only opens one extra tab to read the page "
+            "and closes it again - never closes your browser, and only used when it comes to this."
+            "\n\nTo enable: close Chrome/Edge, then relaunch it with the extra command-line flag "
+            "--remote-debugging-port=9222, then turn this on."
+        )
+        browser_note.setWordWrap(True)
+        browser_note.setStyleSheet("color: #6b7280; font-size: 12px;")
+        browser_wrap.addWidget(browser_note)
+
+        self.browser_agent_check = QCheckBox("Use my own browser as a last resort")
+        browser_wrap.addWidget(self.browser_agent_check)
+
+        browser_form = QFormLayout()
+        self.browser_agent_cdp_input = QLineEdit()
+        self.browser_agent_cdp_input.setPlaceholderText(DEFAULT_CDP_URL)
+        browser_form.addRow("Debugging address", self.browser_agent_cdp_input)
+        browser_wrap.addLayout(browser_form)
+        self.content_layout.addWidget(browser_card)
+
         self.save_button = QPushButton("Save AI Settings")
         self.save_button.setObjectName("primaryButton")
         self.save_button.clicked.connect(self._save)
@@ -221,6 +257,13 @@ class AISettingsPage(BasePage):
                 repo.get_int(session, _KEY_PREFIX + "embedding_top_n", DEFAULT_EMBEDDING_TOP_N)
             )
             self.llm_top_n_input.setValue(repo.get_int(session, _KEY_PREFIX + "llm_top_n", DEFAULT_LLM_TOP_N))
+
+            self.browser_agent_check.setChecked(
+                repo.get_bool(session, SETTING_BROWSER_AGENT_ENABLED, False)
+            )
+            self.browser_agent_cdp_input.setText(
+                repo.get(session, SETTING_BROWSER_AGENT_CDP_URL, DEFAULT_CDP_URL)
+            )
 
     def _load_key_field(self, session, field: QLineEdit, key: str, env_value: str) -> None:
         """Loads a secret field WITHOUT ever pre-filling it with the .env
@@ -292,4 +335,12 @@ class AISettingsPage(BasePage):
                 repo.set(session, _KEY_PREFIX + "voyage_api_key", self.voyage_key_input.text(), secret=True)
             repo.set(session, _KEY_PREFIX + "embedding_top_n", str(self.embedding_top_n_input.value()))
             repo.set(session, _KEY_PREFIX + "llm_top_n", str(self.llm_top_n_input.value()))
+            repo.set(
+                session, SETTING_BROWSER_AGENT_ENABLED,
+                "true" if self.browser_agent_check.isChecked() else "false",
+            )
+            repo.set(
+                session, SETTING_BROWSER_AGENT_CDP_URL,
+                self.browser_agent_cdp_input.text().strip() or DEFAULT_CDP_URL,
+            )
         QMessageBox.information(self, "Saved", "AI settings saved.")

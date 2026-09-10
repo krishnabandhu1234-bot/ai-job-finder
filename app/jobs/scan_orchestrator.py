@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session
 from app.core.constants import ScanStatus, ScanTrigger, SourceType
 from app.database.models import JobSourceConfig, ScanHistory, utc_now
 from app.jobs.ashby import AshbySource
+from app.jobs.career_page_source import CompanyCareerPageSource
 from app.jobs.deduplicator import DedupOutcome, mark_disappeared_jobs, upsert_job
 from app.jobs.demo_source import DemoSource
 from app.jobs.greenhouse import GreenhouseSource
@@ -45,13 +46,21 @@ _SOURCE_CLASSES: dict[str, type[JobSource]] = {
     SourceType.WORKABLE.value: WorkableSource,
     SourceType.SMARTRECRUITERS.value: SmartRecruitersSource,
     SourceType.RESUME_SEARCH.value: ResumeSearchSource,
+    SourceType.COMPANY_CAREER_PAGE.value: CompanyCareerPageSource,
     SourceType.DEMO.value: DemoSource,
 }
 
 ProgressCallback = Callable[[str], None]
 
 
-def build_source(config_row: JobSourceConfig) -> JobSource | None:
+def build_source(config_row: JobSourceConfig, ai_config=None, browser_config=None) -> JobSource | None:
+    """`ai_config` and `browser_config` are only used by
+    `CompanyCareerPageSource` - it reads an unfamiliar page far more
+    reliably with an LLM than the no-AI heuristic manages alone, and can
+    fall back to the user's own browser as a last resort (see that
+    module). Every other connector ignores both; they're optional and
+    default to None precisely so callers with no such context available
+    (most of the test suite) don't need to change."""
     source_cls = _SOURCE_CLASSES.get(config_row.source_type)
     if source_cls is None:
         logger.warning(
@@ -59,6 +68,11 @@ def build_source(config_row: JobSourceConfig) -> JobSource | None:
             config_row.source_type, config_row.name,
         )
         return None
+    if source_cls is CompanyCareerPageSource:
+        return source_cls(
+            name=config_row.name, config=config_row.config or {},
+            ai_config=ai_config, browser_config=browser_config,
+        )
     return source_cls(name=config_row.name, config=config_row.config or {})
 
 
@@ -88,6 +102,7 @@ def run_scan(
     session: Session,
     trigger: str = ScanTrigger.MANUAL.value,
     progress_callback: ProgressCallback | None = None,
+    context=None,
 ) -> ScanSummary:
     def report(message: str) -> None:
         logger.info(message)
@@ -99,6 +114,19 @@ def run_scan(
     session.flush()
 
     summary = ScanSummary(scan_history_id=scan.id)
+
+    # Resolved once per scan, not per source: it's the same lookup
+    # `resolve_ai_config` always does, and only the career-page source
+    # (if any is configured) actually uses it - see `build_source`.
+    # `context` is optional so every existing caller/test keeps working
+    # unchanged; without it, career-page sources just run heuristic-only.
+    ai_config = None
+    browser_config = None
+    if context is not None:
+        from app.ai.embeddings import resolve_ai_config
+        from app.jobs.career_page_source import resolve_browser_agent_config
+        ai_config = resolve_ai_config(session, context)
+        browser_config = resolve_browser_agent_config(session, context)
 
     enabled_sources = session.scalars(
         select(JobSourceConfig).where(JobSourceConfig.enabled.is_(True))
@@ -114,7 +142,7 @@ def run_scan(
         # rather than needing a second signal/callback threaded through
         # every layer between here and the UI.
         report(f"Scanning {source_row.name}... ({index}/{total_sources})")
-        source = build_source(source_row)
+        source = build_source(source_row, ai_config=ai_config, browser_config=browser_config)
         now = utc_now()
 
         if source is None:

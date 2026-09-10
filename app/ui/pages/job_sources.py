@@ -1,11 +1,13 @@
 """Job Sources (section 4). Add/enable/disable/remove sources backed by
-real connectors (Greenhouse/Lever/Ashby/Demo), and test connectivity for
-one source at a time without running a full scan.
+real connectors (Greenhouse/Lever/Ashby/Workable/SmartRecruiters/Demo),
+and test connectivity for one source at a time without running a full
+scan.
 
-Only official ATS public job-board APIs and the built-in Demo source are
-supported today - see app/jobs/source.py for the extensibility point a
-future CompanyCareerPagesSource/WorkdaySource/PublicJobAPI would plug
-into. Nothing here bypasses CAPTCHAs, auth, or robots.txt.
+Beyond those five ATS platforms, "Company career page (any URL)" (see
+app/jobs/career_page_source.py) reads any company's own careers page
+directly - it just needs a URL rather than a documented API, so it's the
+one type here that isn't limited to a fixed list of platforms. Nothing
+here bypasses CAPTCHAs, auth, or robots.txt.
 """
 
 from __future__ import annotations
@@ -36,6 +38,7 @@ _SOURCE_TYPE_LABELS = {
     "workable": "Workable",
     "smartrecruiters": "SmartRecruiters",
     "resume_search": "Job search (automatic)",
+    "company_career_page": "Company career page (any URL)",
     "demo": "Demo (example data)",
 }
 
@@ -50,6 +53,7 @@ _CONFIG_FIELD_LABELS = {
     "ashby": ("board_name", "Board name (from jobs.ashbyhq.com/<name>)"),
     "workable": ("account_slug", "Account slug (from apply.workable.com/<slug>)"),
     "smartrecruiters": ("company_slug", "Company slug (from jobs.smartrecruiters.com/<slug>)"),
+    "company_career_page": ("url", "Careers page URL (e.g. https://company.com/careers) - works on any company's own page, not just these five platforms"),
     "demo": (None, None),
 }
 
@@ -312,11 +316,16 @@ class JobSourcesPage(BasePage):
         self.refresh()
 
     def _test_source(self, source_id: int) -> None:
+        from app.ai.embeddings import resolve_ai_config
+        from app.jobs.career_page_source import resolve_browser_agent_config
+
         with session_scope() as session:
             source_row = self.context.job_sources_repo.get(session, source_id)
             if source_row is None:
                 return
-            source = build_source(source_row)
+            ai_config = resolve_ai_config(session, self.context)
+            browser_config = resolve_browser_agent_config(session, self.context)
+            source = build_source(source_row, ai_config=ai_config, browser_config=browser_config)
             if source is None:
                 QMessageBox.warning(
                     self, "Not Supported",

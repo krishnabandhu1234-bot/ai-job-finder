@@ -48,13 +48,16 @@ class ScanWorker(QObject):
             from app.core.app_context import get_context
             from app.core.pipeline import run_auto_discovery
 
+            context = get_context()
             self.progress.emit("Looking for new companies that match your resume...")
-            added, _error = run_auto_discovery(get_context())
+            added, _error = run_auto_discovery(context)
             if added:
                 self.progress.emit(f"Found {added} new compan{'y' if added == 1 else 'ies'} to watch.")
 
             with session_scope() as session:
-                summary: ScanSummary = run_scan(session, trigger=self.trigger, progress_callback=self.progress.emit)
+                summary: ScanSummary = run_scan(
+                    session, trigger=self.trigger, progress_callback=self.progress.emit, context=context
+                )
             self.finished.emit(summary)
         except Exception as exc:
             logger.exception("Scan failed unexpectedly")

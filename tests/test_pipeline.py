@@ -60,7 +60,10 @@ def _seed_scan_history(session) -> int:
 
 
 def _stub_pipeline_stages(monkeypatch, scan_id):
-    monkeypatch.setattr(scan_orchestrator_module, "run_scan", lambda session, trigger: _FakeScanSummary(scan_id))
+    monkeypatch.setattr(
+        scan_orchestrator_module, "run_scan",
+        lambda session, trigger, context=None: _FakeScanSummary(scan_id),
+    )
     monkeypatch.setattr(ranker_module, "run_ranking", lambda session, context, progress_callback=None: _FakeRankSummary())
     monkeypatch.setattr(
         email_service_module, "send_daily_report_now", lambda session, context: _FakeEmailResult()
@@ -167,7 +170,10 @@ class _UsableAIConfig:
 
 def test_pipeline_records_ai_and_email_results_on_scan_history(db_session, app_context, monkeypatch):
     scan_id = _seed_scan_history(db_session)
-    monkeypatch.setattr(scan_orchestrator_module, "run_scan", lambda session, trigger: _FakeScanSummary(scan_id))
+    monkeypatch.setattr(
+        scan_orchestrator_module, "run_scan",
+        lambda session, trigger, context=None: _FakeScanSummary(scan_id),
+    )
     monkeypatch.setattr(ranker_module, "run_ranking", lambda session, context, progress_callback=None: _FakeRankSummary())
     monkeypatch.setattr(
         email_service_module, "send_daily_report_now", lambda session, context: _FakeEmailResult(sent=True, job_count=3)
@@ -194,7 +200,10 @@ def test_pipeline_records_ai_and_email_results_on_scan_history(db_session, app_c
 
 def test_pipeline_survives_email_stage_failure(db_session, app_context, monkeypatch):
     scan_id = _seed_scan_history(db_session)
-    monkeypatch.setattr(scan_orchestrator_module, "run_scan", lambda session, trigger: _FakeScanSummary(scan_id))
+    monkeypatch.setattr(
+        scan_orchestrator_module, "run_scan",
+        lambda session, trigger, context=None: _FakeScanSummary(scan_id),
+    )
     monkeypatch.setattr(ranker_module, "run_ranking", lambda session, context, progress_callback=None: _FakeRankSummary())
 
     def _raise(session, context):
@@ -214,7 +223,7 @@ def test_pipeline_survives_email_stage_failure(db_session, app_context, monkeypa
 
 
 def test_pipeline_survives_scan_stage_failure_and_still_ranks(db_session, app_context, monkeypatch):
-    def _raise(session, trigger):
+    def _raise(session, trigger, context=None):
         raise RuntimeError("network unreachable")
 
     monkeypatch.setattr(scan_orchestrator_module, "run_scan", _raise)

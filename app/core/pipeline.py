@@ -301,7 +301,7 @@ def run_full_pipeline(context, trigger: str = ScanTrigger.SCHEDULED.value) -> Pi
 
     try:
         with session_scope() as session:
-            scan_summary = run_scan(session, trigger=trigger)
+            scan_summary = run_scan(session, trigger=trigger, context=context)
             result.scan_history_id = scan_summary.scan_history_id
             result.jobs_retrieved = scan_summary.jobs_retrieved
             result.new_jobs = scan_summary.total_new_or_reappeared

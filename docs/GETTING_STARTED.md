@@ -163,11 +163,26 @@ Type a name for it, paste that last bit into the box, click **Add
 Source**. Press **Fetch Now** on the row to confirm it works — it'll
 report how many jobs it found.
 
-> **Not every company can be added.** These five platforms cover a large
-> share of tech employers, but plenty of companies use something else
-> (Workday is the most common gap) or run their own careers page, and
-> those can't be watched yet. If a company you want isn't findable,
-> that's a limitation of the app, not something you've done wrong.
+**If a company isn't on any of those five platforms**, choose source
+type **Company career page (any URL)** instead and paste their actual
+careers page URL (e.g. `https://company.com/careers`) — no slug or
+special format needed. This reads the page directly, the same way you
+would: it looks for links that read like job postings, and if you've
+set up an AI provider, hands the page to it to read off every open role
+the way a person would, which handles far more page layouts than a
+fixed pattern ever could. If the page's job list only appears after
+JavaScript runs (some modern sites work this way), it automatically
+falls back to rendering the page in a real headless browser before
+reading it — slower, but it still gets there. A site whose `robots.txt`
+explicitly disallows automated access is skipped, same as it would be
+for a person's browser extension or crawler.
+
+> **This one type genuinely works on any company**, not five — but it's
+> a manual add: you still have to supply that company's URL yourself.
+> The app can't yet turn "Acme Corp" into the right URL on its own
+> (that would need a paid web-search API this app doesn't use); once you
+> give it a URL, though, it reads that page about as well as engineering
+> allows.
 
 ### Optional — Just try it out (free, no AI, no internet)
 

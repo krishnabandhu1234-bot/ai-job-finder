@@ -19,6 +19,22 @@ httpx==0.27.2
 beautifulsoup4==4.12.3
 tenacity==9.0.0
 
+# Optional: browser fallbacks for the "any career page" job source
+# (app/jobs/career_page_source.py) - used only when a plain HTTP GET
+# doesn't find a job list. Two tiers share this one dependency: an
+# invisible headless render (for JS-only pages) and, opt-in only,
+# attaching to the user's own already-running Chrome/Edge over the
+# Chrome DevTools Protocol (for sites that specifically block anonymous
+# automated browsers). Genuinely optional: the package itself is small,
+# but its browser binary (~150-300MB) is fetched separately via
+# `playwright install chromium`, so it is NOT bundled into the
+# PyInstaller build by default (see packaging/aijobfinder.spec and
+# docs/AI_MODELS.md for the tradeoff and how to enable it). If this
+# package or its browser isn't installed, both fallback tiers are
+# skipped and the source still works from static HTML + the heuristic/AI
+# extraction - it just won't see JS-only or bot-blocked listings.
+playwright==1.47.0
+
 # --- Phase 4: embeddings / ML matching ---
 # torch is CPU-only - install from the PyTorch CPU index to avoid pulling
 # in ~2GB of unused CUDA libraries (see README build instructions):
