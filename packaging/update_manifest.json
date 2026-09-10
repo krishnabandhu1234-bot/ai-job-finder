@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
-  "download_url": "https://github.com/krishnabandhu1234-bot/ai-job-finder/releases/download/v0.2.0/AIJobFinder-Setup.exe",
-  "notes": "Scan progress bar on the Dashboard, unbounded company discovery that keeps growing every run, and adaptive rate-limit handling."
+  "version": "0.3.0",
+  "download_url": "https://github.com/krishnabandhu1234-bot/ai-job-finder/releases/download/v0.3.0/AIJobFinder-Setup.exe",
+  "notes": "Reads any company's own careers page directly, not just the five ATS platforms, with your own browser as an opt-in last resort for sites that block automated browsers."
 }
